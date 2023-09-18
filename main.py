@@ -41,19 +41,19 @@ class PasswordGeneratorApp(QWidget):
         self.setWindowTitle("Password Generator")
         self.setGeometry(100, 100, 400, 250)
 
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
 
         self.method_combo = QComboBox()
-        self.method_combo.addItem("head -c () /dev/urandom | base64")
-        self.method_combo.addItem("head -c () /dev/random | xxd -p")
+        self.method_combo.addItems(
+            ["head -c () /dev/urandom | base64", "head -c () /dev/random | xxd -p"]
+        )
 
         self.password_label = QLabel("Generated Password:")
         self.password_field = QLineEdit()
         self.password_field.setReadOnly(True)
 
         self.length_slider = QSlider(Qt.Orientation.Horizontal)
-        self.length_slider.setMinimum(4)
-        self.length_slider.setMaximum(64)  # Adjust the maximum length as needed
+        self.length_slider.setRange(4, 64)
         self.length_slider.setValue(16)
         self.length_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.length_slider.setTickInterval(4)
@@ -76,9 +76,7 @@ class PasswordGeneratorApp(QWidget):
         layout.addLayout(length_layout)
         layout.addWidget(self.generate_button)
 
-        self.setLayout(layout)
-
-    def update_length_label(self, value):
+    def update_length_label(self, value: int):
         """
         Updates the length label with the current value of the length slider.
 
@@ -100,7 +98,7 @@ class PasswordGeneratorApp(QWidget):
 
         self.password_field.setText(password)
 
-    def generate_secure_password(self, length):
+    def generate_secure_password(self, length: int) -> str:
         """
         Generates a new secure password using /dev/urandom and base64.
 
@@ -110,10 +108,10 @@ class PasswordGeneratorApp(QWidget):
         Returns:
             str: The generated password.
         """
-        command = ["head", "-c", str(length), "/dev/urandom", "|", "base64"]
-        return self._extracted_from_generate_number_password_3(command)
+        command = f"head -c {length} /dev/urandom | base64"
+        return self._execute_shell_command(command)
 
-    def generate_number_password(self, length):
+    def generate_number_password(self, length: int) -> str:
         """
         Generates a new password using /dev/random and xxd.
 
@@ -123,22 +121,20 @@ class PasswordGeneratorApp(QWidget):
         Returns:
             str: The generated password.
         """
-        command = ["head", "-c", str(length), "/dev/random", "|", "xxd", "-p"]
-        return self._extracted_from_generate_number_password_3(command)
+        command = f"head -c {length} /dev/random | xxd -p"
+        return self._execute_shell_command(command)
 
-    def _extracted_from_generate_number_password_3(self, command):
+    def _execute_shell_command(self, command: str) -> str:
         """
         Executes a shell command and returns the output.
 
         Args:
-            command (list): A list of strings representing the command to execute.
+            command (str): The command to execute.
 
         Returns:
             str: The output of the command.
         """
-        process = subprocess.Popen(
-            " ".join(command), shell=True, stdout=subprocess.PIPE
-        )
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         output, _ = process.communicate()
         return output.decode().strip()
 
